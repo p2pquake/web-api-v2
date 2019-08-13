@@ -1,0 +1,39 @@
+openapi: "3.0.2"
+info:
+  title: "P2P地震情報 API仕様書"
+  version: "0.1.0"
+servers:
+  - url: https://api.p2pquake.net/v2
+paths:
+  /jma/quake:
+    get:
+      tags:
+        - 気象庁 地震情報・津波予報 JSON API
+      summary: 地震情報
+      responses:
+        200:
+          description: TODO
+  /jma/tsunami:
+    get:
+      tags:
+        - 気象庁 地震情報・津波予報 JSON API
+      summary: 津波予報
+      responses:
+        200:
+          description: TODO
+  /history:
+    get:
+      tags:
+        - P2P地震情報 JSON API
+      summary: 履歴API
+      responses:
+        200:
+          description: TODO
+  /ws:
+    get:
+      tags:
+        - P2P地震情報 リアルタイムAPI
+      summary: WebSocket
+      responses:
+        default:
+          description: TODO
