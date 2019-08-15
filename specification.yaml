@@ -9,6 +9,23 @@ paths:
     get:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
+      summary: 地震情報リスト
+      responses:
+        200:
+          description: TODO
+    parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/sinceId'
+      - $ref: '#/components/parameters/untilId'
+      - $ref: '#/components/parameters/sinceDate'
+      - $ref: '#/components/parameters/untilDate'
+      - $ref: '#/components/parameters/quakeType'
+      - $ref: '#/components/parameters/minScale'
+      - $ref: '#/components/parameters/prefecture'
+  /jma/quake/{id}:
+    get:
+      tags:
+        - 気象庁 地震情報・津波予報 JSON API
       summary: 地震情報
       responses:
         200:
@@ -37,3 +54,86 @@ paths:
       responses:
         default:
           description: TODO
+components:
+  parameters:
+    sinceId:
+      name: since_id
+      in: query
+      required: false
+      description: 指定IDより新しい情報のみを返却します。指定IDに近いものから（古いものから）最大 limit 件まで返却します。
+      schema:
+        type: string
+    untilId:
+      name: until_id
+      in: query
+      required: false
+      description: 指定IDより古い情報のみを返却します。指定IDに近いものから（新しいものから）最大 limit 件まで返却します。
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: 返却件数（デフォルトは10）
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+    quakeType:
+      name: types[]
+      in: query
+      required: false
+      description: 地震情報の種類
+      schema:
+        type: array
+        items:
+          type: string
+          enum: 
+            - ScalePrompt(震度速報)
+            - Destination(震源に関する情報)
+            - ScaleAndDestination(震度・震源に関する情報)
+            - DetailScale(各地の震度に関する情報)
+            - Foreign(遠地地震に関する情報)
+            - Other(その他の情報)
+    minScale:
+      name: min_scale
+      in: query
+      required: false
+      description: 最低震度
+      schema:
+        type: integer
+        format: int32
+        enum:
+          - 10(震度1)
+          - 20(震度2)
+          - 30(震度3)
+          - 40(震度4)
+          - 45(震度5弱)
+          - 50(震度5強)
+          - 55(震度6弱)
+          - 60(震度6強)
+          - 70(震度7)
+    prefecture:
+      name: prefectures[]
+      in: query
+      required: false
+      description: 都道府県
+      schema:
+        type: array
+        items:
+          type: string
+    sinceDate:
+      name: since_date
+      in: query
+      required: false
+      description: 地震発生が指定日かそれ以降 (yyyyMMdd形式)
+      schema:
+        type: string
+    untilDate:
+      name: until_date
+      in: query
+      required: false
+      description: 地震発生が指定日かそれ以前 (yyyyMMdd形式)
+      schema:
+        type: string
