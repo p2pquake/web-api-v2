@@ -10,17 +10,20 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 地震情報リスト
+      description: 地震情報を返却します。返却は降順です。
       responses:
         200:
           description: TODO
     parameters:
       - $ref: '#/components/parameters/limit'
-      - $ref: '#/components/parameters/sinceId'
-      - $ref: '#/components/parameters/untilId'
+      - $ref: '#/components/parameters/offset'
       - $ref: '#/components/parameters/sinceDate'
       - $ref: '#/components/parameters/untilDate'
       - $ref: '#/components/parameters/quakeType'
+      - $ref: '#/components/parameters/minMagnitude'
+      - $ref: '#/components/parameters/maxMagnitude'
       - $ref: '#/components/parameters/minScale'
+      - $ref: '#/components/parameters/maxScale'
       - $ref: '#/components/parameters/prefecture'
   /jma/quake/{id}:
     get:
@@ -30,6 +33,12 @@ paths:
       responses:
         200:
           description: TODO
+    parameters:
+      - name: id
+        in: query
+        description: ID
+        schema:
+          type: string
   /jma/tsunami:
     get:
       tags:
@@ -56,18 +65,11 @@ paths:
           description: TODO
 components:
   parameters:
-    sinceId:
-      name: since_id
+    offset:
+      name: offset
       in: query
       required: false
-      description: 指定IDより新しい情報のみを返却します。指定IDに近いものから（古いものから）最大 limit 件まで返却します。
-      schema:
-        type: string
-    untilId:
-      name: until_id
-      in: query
-      required: false
-      description: 指定IDより古い情報のみを返却します。指定IDに近いものから（新しいものから）最大 limit 件まで返却します。
+      description: 読み飛ばす件数 (デフォルトは0)。例えば、 limit=100&offset=200 とすると、201件目から100件を返却します。
       schema:
         type: string
     limit:
@@ -100,7 +102,25 @@ components:
       name: min_scale
       in: query
       required: false
-      description: 最低震度
+      description: 最大震度の下限
+      schema:
+        type: integer
+        format: int32
+        enum:
+          - 10(震度1)
+          - 20(震度2)
+          - 30(震度3)
+          - 40(震度4)
+          - 45(震度5弱)
+          - 50(震度5強)
+          - 55(震度6弱)
+          - 60(震度6強)
+          - 70(震度7)
+    maxScale:
+      name: max_scale
+      in: query
+      required: false
+      description: 最大震度の上限
       schema:
         type: integer
         format: int32
@@ -118,11 +138,25 @@ components:
       name: prefectures[]
       in: query
       required: false
-      description: 都道府県
+      description: 各都道府県の最低震度
       schema:
         type: array
         items:
-          type: string
+          type: object
+    minMagnitude:
+      name: min_magnitude
+      in: query
+      required: false
+      description: マグニチュード下限
+      schema:
+        type: number
+    maxMagnitude:
+      name: max_magnitude
+      in: query
+      required: false
+      description: マグニチュード上限
+      schema:
+        type: number
     sinceDate:
       name: since_date
       in: query
@@ -135,5 +169,11 @@ components:
       in: query
       required: false
       description: 地震発生が指定日かそれ以前 (yyyyMMdd形式)
+      schema:
+        type: string
+    id:
+      name: id
+      in: query
+      description: ID
       schema:
         type: string
