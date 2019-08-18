@@ -13,7 +13,13 @@ paths:
       description: 地震情報を返却します。返却は降順（新しい順）です。
       responses:
         200:
-          description: TODO
+          description: 地震情報リスト
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JMAQuakes'
+        400:
+          description: リクエストパラメタ不正
     parameters:
       - $ref: '#/components/parameters/limit'
       - $ref: '#/components/parameters/offset'
@@ -32,21 +38,51 @@ paths:
       summary: 地震情報
       responses:
         200:
-          description: TODO
+          description: 地震情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JMAQuake'
+        404:
+          description: 指定IDの情報が見つかりません
     parameters:
-      - name: id
-        in: query
-        description: ID
-        schema:
-          type: string
+      - $ref: '#/components/parameters/id'
   /jma/tsunami:
+    get:
+      tags:
+        - 気象庁 地震情報・津波予報 JSON API
+      summary: 津波予報リスト
+      description: 津波予報を返却します。返却は降順（新しい順）です。
+      responses:
+        200:
+          description: 津波予報リスト
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JMATsunamis'
+        400:
+          description: リクエストパラメタ不正
+    parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/sinceDate'
+      - $ref: '#/components/parameters/untilDate'
+  /jma/tsunami/{id}:
     get:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 津波予報
       responses:
         200:
-          description: TODO
+          description: 津波予報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JMATsunami'
+        404:
+          description: 指定IDの情報が見つかりません
+    parameters:
+      - $ref: '#/components/parameters/id'
   /history:
     get:
       tags:
@@ -177,3 +213,16 @@ components:
       description: ID
       schema:
         type: string
+  schemas:
+    JMAQuake:
+      type: object
+    JMAQuakes:
+      type: array
+      items:
+        $ref: '#/components/schemas/JMAQuake'
+    JMATsunami:
+      type: object
+    JMATsunamis:
+      type: array
+      items:
+        $ref: '#/components/schemas/JMATsunami'
