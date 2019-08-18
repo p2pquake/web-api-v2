@@ -10,7 +10,7 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 地震情報リスト
-      description: 地震情報を返却します。返却は降順です。
+      description: 地震情報を返却します。返却は降順（新しい順）です。
       responses:
         200:
           description: TODO
@@ -161,14 +161,14 @@ components:
       name: since_date
       in: query
       required: false
-      description: 地震発生が指定日かそれ以降 (yyyyMMdd形式)
+      description: 指定日かそれ以降 (yyyyMMdd形式)
       schema:
         type: string
     untilDate:
       name: until_date
       in: query
       required: false
-      description: 地震発生が指定日かそれ以前 (yyyyMMdd形式)
+      description: 指定日かそれ以前 (yyyyMMdd形式)
       schema:
         type: string
     id:
