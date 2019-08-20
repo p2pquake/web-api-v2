@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -64,10 +65,16 @@ func quakeEndpoint(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"code", 551}}
-	limit := int64(10)
-	options := options.FindOptions{Limit: &limit}
+	offset, _ := strconv.ParseInt(c.DefaultQuery("offset", "0"), 10, 64)
+	limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
+	if limit <= 0 || limit > 100 {
+		c.Status(400)
+		return
+	}
 
+	options := options.FindOptions{Limit: &limit, Skip: &offset}
+
+	filter := bson.D{{"code", 551}}
 	cur, err := collection.Find(ctx, filter, &options)
 	if err != nil {
 		return
