@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -55,7 +56,8 @@ func main() {
 	{
 		jma := v2.Group("/jma")
 		{
-			jma.GET("/quake", quakeEndpoint)
+			jma.GET("/quake", searchQuake)
+			jma.GET("/quake/:id", getQuake)
 			jma.GET("/tsunami", tsunamiEndpoint)
 		}
 	}
@@ -63,7 +65,7 @@ func main() {
 	r.Run()
 }
 
-func quakeEndpoint(c *gin.Context) {
+func searchQuake(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -129,6 +131,28 @@ func quakeEndpoint(c *gin.Context) {
 	}
 
 	c.JSON(200, items)
+}
+
+func getQuake(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		c.Status(400)
+		return
+	}
+	filters := bson.D{{"code", 551}, {"_id", id}}
+
+	var result bson.M
+	err = collection.FindOne(ctx, filters).Decode(&result)
+	if err != nil {
+		c.Status(404)
+		return
+	}
+
+	cleanJmaRecord(result)
+	c.JSON(200, result)
 }
 
 func tsunamiEndpoint(c *gin.Context) {
