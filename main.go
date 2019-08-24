@@ -28,6 +28,7 @@ type Config struct {
 type QuakeParam struct {
 	Offset       int64    `form:"offset" binding:"min=0"`
 	Limit        int64    `form:"limit" binding:"min=0,max=100"`
+	Order        int64    `form:"order" binding:"min=-1,max=1"`
 	QuakeType    string   `form:"quake_type" binding:"omitempty,quaketype"`
 	MinScale     int64    `form:"min_scale" binding:"omitempty,scale"`
 	MaxScale     int64    `form:"max_scale" binding:"omitempty,scale"`
@@ -41,6 +42,7 @@ type QuakeParam struct {
 type TsunamiParam struct {
 	Offset    int64  `form:"offset" binding:"min=0"`
 	Limit     int64  `form:"limit" binding:"min=0,max=100"`
+	Order     int64  `form:"order" binding:"min=-1,max=1"`
 	SinceDate string `form:"since_date" binding:"omitempty,numeric,len=8"`
 	UntilDate string `form:"until_date" binding:"omitempty,numeric,len=8"`
 }
@@ -137,7 +139,11 @@ func searchQuake(c *gin.Context) {
 	if limit == 0 {
 		limit = 10
 	}
-	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
+	order := quakeParam.Order
+	if order == 0 {
+		order = -1
+	}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", order}}}
 
 	// filters
 	filters := bson.D{{"code", 551}}
@@ -207,7 +213,11 @@ func searchTsunami(c *gin.Context) {
 	if limit == 0 {
 		limit = 10
 	}
-	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
+	order := tsunamiParam.Order
+	if order == 0 {
+		order = -1
+	}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", order}}}
 
 	// filters
 	filters := bson.D{{"code", 552}}

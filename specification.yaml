@@ -10,7 +10,7 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 地震情報リスト
-      description: 地震情報を返却します。返却は降順（新しい順）です。
+      description: 地震情報を返却します。デフォルトは新しい順に最大10件です。
       responses:
         200:
           description: 地震情報リスト
@@ -19,10 +19,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/JMAQuakes'
         400:
-          description: リクエストパラメタ不正
+          description: パラメタに誤りがあります
     parameters:
       - $ref: '#/components/parameters/limit'
       - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/order'
       - $ref: '#/components/parameters/sinceDate'
       - $ref: '#/components/parameters/untilDate'
       - $ref: '#/components/parameters/quakeType'
@@ -38,11 +39,13 @@ paths:
       summary: 地震情報
       responses:
         200:
-          description: 地震情報
+          description: 指定したIDの地震情報を返却します。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/JMAQuake'
+        400:
+          description: IDの形式が間違っています
         404:
           description: 指定IDの情報が見つかりません
     parameters:
@@ -52,7 +55,7 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 津波予報リスト
-      description: 津波予報を返却します。返却は降順（新しい順）です。
+      description: 津波予報を返却します。デフォルトは新しい順に最大10件です。
       responses:
         200:
           description: 津波予報リスト
@@ -61,10 +64,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/JMATsunamis'
         400:
-          description: リクエストパラメタ不正
+          description: パラメタに誤りがあります
     parameters:
       - $ref: '#/components/parameters/limit'
       - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/order'
       - $ref: '#/components/parameters/sinceDate'
       - $ref: '#/components/parameters/untilDate'
   /jma/tsunami/{id}:
@@ -74,11 +78,13 @@ paths:
       summary: 津波予報
       responses:
         200:
-          description: 津波予報
+          description: 指定したIDの津波予報を返却します。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/JMATsunami'
+        400:
+          description: IDの形式が間違っています
         404:
           description: 指定IDの情報が見つかりません
     parameters:
@@ -207,6 +213,16 @@ components:
       description: 指定日かそれ以前 (yyyyMMdd形式)
       schema:
         type: string
+    order:
+      name: order
+      in: query
+      description: 並び順
+      schema:
+        type: integer
+        format: int32
+        enum:
+          - 1 (昇順、古い順)
+          - -1 (降順、新しい順)
     id:
       name: id
       in: query
