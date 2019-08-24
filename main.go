@@ -38,6 +38,13 @@ type QuakeParam struct {
 	Prefectures  []string `form:"prefectures[]" binding:"omitempty,dive,contains=0x2C"`
 }
 
+type TsunamiParam struct {
+	Offset    int64  `form:"offset" binding:"min=0"`
+	Limit     int64  `form:"limit" binding:"min=0,max=100"`
+	SinceDate string `form:"since_date" binding:"omitempty,numeric,len=8"`
+	UntilDate string `form:"until_date" binding:"omitempty,numeric,len=8"`
+}
+
 var collection *mongo.Collection
 
 func validQuakeType(
@@ -106,7 +113,8 @@ func main() {
 		{
 			jma.GET("/quake", searchQuake)
 			jma.GET("/quake/:id", getQuake)
-			jma.GET("/tsunami", tsunamiEndpoint)
+			jma.GET("/tsunami", searchTsunami)
+			jma.GET("/tsunami/:id", getTsunami)
 		}
 	}
 
@@ -129,7 +137,7 @@ func searchQuake(c *gin.Context) {
 	if limit == 0 {
 		limit = 10
 	}
-	options := options.FindOptions{Limit: &limit, Skip: &offset}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
 
 	// filters
 	filters := bson.D{{"code", 551}}
@@ -183,7 +191,60 @@ func searchQuake(c *gin.Context) {
 	c.JSON(200, items)
 }
 
+func searchTsunami(c *gin.Context) {
+	var tsunamiParam TsunamiParam
+	if err := c.ShouldBindWith(&tsunamiParam, binding.Query); err != nil {
+		c.Status(400)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	// options
+	offset := tsunamiParam.Offset
+	limit := tsunamiParam.Limit
+	if limit == 0 {
+		limit = 10
+	}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
+
+	// filters
+	filters := bson.D{{"code", 552}}
+
+	dateRegexp := regexp.MustCompile(`^(\d{4})(\d{2})(\d{2})$`)
+	if matches := dateRegexp.FindStringSubmatch(tsunamiParam.SinceDate); matches != nil {
+		filters = append(filters, bson.E{"issue.time", bson.D{{"$gte", matches[1] + "/" + matches[2] + "/" + matches[3] + " 00:00:00"}}})
+	}
+	if matches := dateRegexp.FindStringSubmatch(tsunamiParam.UntilDate); matches != nil {
+		filters = append(filters, bson.E{"issue.time", bson.D{{"$lte", matches[1] + "/" + matches[2] + "/" + matches[3] + " 23:59:59"}}})
+	}
+
+	cur, err := collection.Find(ctx, filters, &options)
+	if err != nil {
+		return
+	}
+	defer cur.Close(ctx)
+
+	items := make([]bson.M, 0)
+	cur.All(ctx, &items)
+
+	for _, item := range items {
+		cleanJmaRecord(item)
+	}
+
+	c.JSON(200, items)
+}
+
 func getQuake(c *gin.Context) {
+	getItem(c, 551)
+}
+
+func getTsunami(c *gin.Context) {
+	getItem(c, 552)
+}
+
+func getItem(c *gin.Context, code int64) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -192,7 +253,7 @@ func getQuake(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	filters := bson.D{{"code", 551}, {"_id", id}}
+	filters := bson.D{{"code", code}, {"_id", id}}
 
 	var result bson.M
 	err = collection.FindOne(ctx, filters).Decode(&result)
@@ -203,30 +264,6 @@ func getQuake(c *gin.Context) {
 
 	cleanJmaRecord(result)
 	c.JSON(200, result)
-}
-
-func tsunamiEndpoint(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	filter := bson.D{{"code", 552}}
-	limit := int64(10)
-	options := options.FindOptions{Limit: &limit}
-
-	cur, err := collection.Find(ctx, filter, &options)
-	if err != nil {
-		return
-	}
-	defer cur.Close(ctx)
-
-	var items []bson.M
-	cur.All(ctx, &items)
-
-	for _, item := range items {
-		cleanJmaRecord(item)
-	}
-
-	c.JSON(200, items)
 }
 
 func cleanJmaRecord(m bson.M) {
