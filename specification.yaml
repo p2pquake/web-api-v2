@@ -10,7 +10,9 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 地震情報リスト
-      description: 地震情報を返却します。デフォルトは新しい順に最大10件です。
+      description: |
+        地震情報を返却します。デフォルトは新しい順に最大10件です。
+        データは2015年1月10日から提供しています。
       responses:
         200:
           description: 地震情報リスト
@@ -55,7 +57,9 @@ paths:
       tags:
         - 気象庁 地震情報・津波予報 JSON API
       summary: 津波予報リスト
-      description: 津波予報を返却します。デフォルトは新しい順に最大10件です。
+      description: |
+        津波予報を返却します。デフォルトは新しい順に最大10件です。
+        データは2016年11月22日から提供しています。
       responses:
         200:
           description: 津波予報リスト
