@@ -2,6 +2,7 @@ openapi: "3.0.2"
 info:
   title: "P2P地震情報 API仕様書"
   version: "2.0.0"
+  description: "[気象庁 | 著作権・リンク・個人情報保護について](http://www.jma.go.jp/jma/kishou/info/coment.html)に従い、気象庁が発表した地震情報・津波予報を一部加工して提供しています。"
 servers:
   - url: https://api.p2pquake.net/v2
 paths:
@@ -231,7 +232,8 @@ components:
           - -1 (降順、新しい順)
     id:
       name: id
-      in: query
+      in: path
+      required: true
       description: ID
       schema:
         type: string
