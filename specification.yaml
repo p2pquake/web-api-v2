@@ -96,16 +96,18 @@ paths:
   /history:
     get:
       tags:
-        - P2P地震情報 JSON API
-      summary: 履歴API
+        - (未実装)
+      summary: P2P地震情報 JSON API (v2)
+      description: 未実装です。[JSON API v1](https://www.p2pquake.net/dev/json-api/) をご利用ください。
       responses:
         200:
           description: TODO
   /ws:
     get:
       tags:
-        - P2P地震情報 リアルタイムAPI
-      summary: WebSocket
+        - (未実装)
+      summary: P2P地震情報 リアルタイムAPI
+      description: 未実装です。
       responses:
         default:
           description: TODO
@@ -236,12 +238,205 @@ components:
   schemas:
     JMAQuake:
       type: object
+      required:
+        - issue
+        - earthquake
+      properties:
+        issue:
+          type: object
+          description: 発表元の情報
+          required:
+            - type
+          properties:
+            source:
+              type: string
+              description: 発表元
+            time:
+              type: string
+              description: 発表日時
+            type:
+              type: string
+              description: 発表種類
+              enum:
+                - ScalePrompt(震度速報)
+                - Destination(震源に関する情報)
+                - ScaleAndDestination(震度・震源に関する情報)
+                - DetailScale(各地の震度に関する情報)
+                - Foreign(遠地地震に関する情報)
+                - Other(その他の情報)
+            correct:
+              type: boolean
+              description: 震度訂正かどうか
+        earthquake:
+          type: object
+          required:
+            - time
+          properties:
+            time:
+              type: string
+              description: 発生日時
+            hypocenter:
+              type: object
+              description: 震源情報
+              properties:
+                name:
+                  type: string
+                  description: 名称
+                latitude:
+                  type: number
+                  description: 緯度。震源情報が存在しない場合は-200となります。
+                longitude:
+                  type: number
+                  description: 経度。震源情報が存在しない場合は-200となります。
+                depth:
+                  type: integer
+                  format: int32
+                  description: 深さ(km)。「ごく浅い」は0、震源情報が存在しない場合は-1となります。
+                magnitude:
+                  type: number
+                  description: マグニチュード。震源情報が存在しない場合は-1となります。
+            maxScale:
+              type: integer
+              format: int32
+              description: 最大震度。震度情報が存在しない場合は-1となります。
+              enum:
+                - -1(震度情報なし)
+                - 10(震度1)
+                - 20(震度2)
+                - 30(震度3)
+                - 40(震度4)
+                - 45(震度5弱)
+                - 50(震度5強)
+                - 55(震度6弱)
+                - 60(震度6強)
+                - 70(震度7)
+            domesticTsunami:
+              type: string
+              description: 国内への津波の有無
+              enum:
+                - None(なし)
+                - Unknown(不明)
+                - Checking(調査中)
+                - NonEffective(若干の海面変動が予想されるが、被害の心配なし)
+                - Watch(津波注意報)
+                - Warning(津波予報(種類不明))
+            foreignTsunami:
+              type: string
+              description: 海外での津波の有無
+              enum:
+                - None(なし)
+                - Unknown(不明)
+                - Checking(調査中)
+                - NonEffectiveNearby(震源の近傍で小さな津波の可能性があるが、被害の心配なし)
+                - WarningNearby(震源の近傍で津波の可能性がある)
+                - WarningPacific(太平洋で津波の可能性がある)
+                - WarningPacificWide(太平洋の広域で津波の可能性がある)
+                - WarningIndian(インド洋で津波の可能性がある)
+                - WarningIndianWide(インド洋の広域で津波の可能性がある)
+                - Potential(一般にこの規模では津波の可能性がある)
+        points:
+          type: array
+          description: 震度観測点の情報
+          items:
+            type: object
+            required:
+              - pref
+              - addr
+              - isArea
+              - scale
+            properties:
+              pref:
+                type: string
+                description: 都道府県
+              addr:
+                type: string
+                description: 震度観測点名称（震度速報の場合は [気象庁 | 緊急地震速報や震度情報で用いる区域の名称](http://www.data.jma.go.jp/svd/eqev/data/joho/shindo-name.html) に記載のある区域名）
+              isArea:
+                type: boolean
+                description: 区域名かどうか
+              scale:
+                type: number
+                description: 震度
+                enum:
+                  - 10(震度1)
+                  - 20(震度2)
+                  - 30(震度3)
+                  - 40(震度4)
+                  - 45(震度5弱)
+                  - 46(震度5弱以上と推定されるが震度情報を入手していない)
+                  - 50(震度5強)
+                  - 55(震度6弱)
+                  - 60(震度6強)
+                  - 70(震度7)
     JMAQuakes:
       type: array
       items:
         $ref: '#/components/schemas/JMAQuake'
     JMATsunami:
       type: object
+      required:
+        - code
+        - cancelled
+        - issue
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に552です。
+        cancelled:
+          type: boolean
+          description: 津波予報が解除されたかどうか。trueの場合、areasは空配列です。
+        issue:
+          type: object
+          description: 発表元の情報
+          required:
+            - source
+            - time
+            - type
+          properties:
+            source:
+              type: string
+              description: 発表元
+            time:
+              type: string
+              description: 発表日時
+            type:
+              type: string
+              description: 発表種類。現在は Focus (津波予報) のみです。
+        areas:
+          type: array
+          description: 津波予報の詳細
+          items:
+            type: object
+            properties:
+              grade:
+                type: string
+                description: 津波予報の種類
+                enum:
+                  - MajorWarning (大津波警報)
+                  - Warning (津波警報)
+                  - Watch (津波注意報)
+                  - Unknown (不明)
+              immediate:
+                type: boolean
+                description: 直ちに津波が来襲すると予想されているかどうか
+              name:
+                type: string
+                description: 津波予報区名。[気象庁｜津波予報区について](http://www.data.jma.go.jp/svd/eqev/data/joho/t-yohokuinfo.html)を参照。
+      example:
+        code: 551
+        cancelled: false
+        issue:
+          source: 気象庁
+          time: "2019/06/18 22:24:00"
+          type: "Focus"
+        areas:
+          - grade: Warning
+            immediate: true
+            name: 福島県
+          - grade: Watch
+            immediate: false
+            name: 青森県太平洋沿岸
     JMATsunamis:
       type: array
       items:
