@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"go.mongodb.org/mongo-driver/bson"
@@ -103,6 +104,7 @@ func main() {
 	collection = client.Database(config.Database).Collection(config.Collection)
 
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("quaketype", validQuakeType)
