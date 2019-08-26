@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 info:
   title: "P2P地震情報 API仕様書"
-  version: "0.1.0"
+  version: "2.0.0"
 servers:
   - url: https://api.p2pquake.net/v2
 paths:
@@ -265,8 +265,14 @@ components:
                 - Foreign(遠地地震に関する情報)
                 - Other(その他の情報)
             correct:
-              type: boolean
-              description: 震度訂正かどうか
+              type: string
+              description: 訂正の有無
+              enum:
+                - None(なし)
+                - Unknown(不明)
+                - ScaleOnly(震度)
+                - DestinationOnly(震源)
+                - ScaleAndDestination(震度・震源)
         earthquake:
           type: object
           required:
@@ -368,6 +374,32 @@ components:
                   - 55(震度6弱)
                   - 60(震度6強)
                   - 70(震度7)
+      example:
+        issue:
+          source: 気象庁
+          time: 2019/08/26 20:57:00
+          correct: None
+          type: DetailScale
+        earthquake:
+          domesticTsunami: None
+          foreignTsunami: Unknown
+          hypocenter:
+            depth: 50
+            latitude: 24.4
+            longitude: 125.2
+            magnitude: 4.0
+            name: 宮古島近海
+          maxScale: 10
+          time: 2019/08/26 20:53:00
+        points:
+          - addr: 宮古島市城辺福北
+            isArea: false
+            pref: 沖縄県
+            scale: 10
+          - addr: 宮古島市伊良部長浜
+            isArea: false
+            pref: 沖縄県
+            scale: 10
     JMAQuakes:
       type: array
       items:
@@ -424,7 +456,7 @@ components:
                 type: string
                 description: 津波予報区名。[気象庁｜津波予報区について](http://www.data.jma.go.jp/svd/eqev/data/joho/t-yohokuinfo.html)を参照。
       example:
-        code: 551
+        code: 552
         cancelled: false
         issue:
           source: 気象庁
