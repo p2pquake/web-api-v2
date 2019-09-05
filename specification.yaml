@@ -2,7 +2,7 @@ openapi: "3.0.2"
 info:
   title: "P2P地震情報 API仕様書"
   version: "2.0.0"
-  description: "[気象庁 | 著作権・リンク・個人情報保護について](http://www.jma.go.jp/jma/kishou/info/coment.html)に従い、気象庁が発表した地震情報・津波予報を一部加工して提供しています。"
+  description: "[気象庁 | 著作権・リンク・個人情報保護について](http://www.jma.go.jp/jma/kishou/info/coment.html)に従い、気象庁が発表した地震情報・津波予報を一部加工して提供しています。<br>本APIは、気象庁 利用規約に従っていれば、商用・非商用問わず自由にご利用いただいて構いません。"
 servers:
   - url: https://api.p2pquake.net/v2
 paths:
@@ -118,14 +118,14 @@ components:
       name: offset
       in: query
       required: false
-      description: 読み飛ばす件数 (デフォルトは0)。例えば、 limit=100&offset=200 とすると、201件目から100件を返却します。
+      description: 読み飛ばす件数 (0以上、デフォルトは0)。例えば、 limit=100&offset=200 とすると、201件目から100件を返却します。
       schema:
         type: string
     limit:
       name: limit
       in: query
       required: false
-      description: 返却件数（デフォルトは10）
+      description: 返却件数 (1〜100、デフォルトは10)
       schema:
         type: integer
         format: int32
@@ -187,7 +187,7 @@ components:
       name: prefectures[]
       in: query
       required: false
-      description: 各都道府県の最低震度
+      description: 各都道府県の最低震度。 "兵庫県,10" のように指定します。
       schema:
         type: array
         items:
