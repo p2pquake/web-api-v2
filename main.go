@@ -13,18 +13,19 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"gopkg.in/olahol/melody.v1"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/go-playground/validator.v8"
+	"gopkg.in/olahol/melody.v1"
 )
 
 type Config struct {
 	MongoDBURL string `json:"mongodb_url"`
 	Database   string `json:"database"`
 	Collection string `json:"collection"`
+	ApiKey     string `json:"api_key"`
 }
 
 type QuakeParam struct {
@@ -77,7 +78,7 @@ func validScale(
 	}
 	return false
 }
-:
+
 func main() {
 	file, err := ioutil.ReadFile("config.json")
 	if err != nil {
@@ -131,8 +132,12 @@ func main() {
 
 		admin := v2.Group("/admin")
 		{
-			// FIXME: authentication
 			admin.POST("/broadcast", func(c *gin.Context) {
+				key := c.DefaultQuery("api_key", "")
+				if key != config.ApiKey {
+					c.Status(400)
+					return
+				}
 				data, _ := c.GetRawData()
 				m.Broadcast([]byte(data))
 			})

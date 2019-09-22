@@ -1,5 +1,6 @@
 {
 	"mongodb_url": "mongodb://localhost:27017",
 	"database": "DATABASE",
-	"collection": "COLLECTION"
+	"collection": "COLLECTION",
+	"api_key": "APIKEY"
 }
