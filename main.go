@@ -13,6 +13,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"gopkg.in/olahol/melody.v1"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -76,7 +77,7 @@ func validScale(
 	}
 	return false
 }
-
+:
 func main() {
 	file, err := ioutil.ReadFile("config.json")
 	if err != nil {
@@ -111,6 +112,8 @@ func main() {
 		v.RegisterValidation("scale", validScale)
 	}
 
+	m := melody.New()
+
 	v2 := r.Group("/v2")
 	{
 		jma := v2.Group("/jma")
@@ -119,6 +122,20 @@ func main() {
 			jma.GET("/quake/:id", getQuake)
 			jma.GET("/tsunami", searchTsunami)
 			jma.GET("/tsunami/:id", getTsunami)
+		}
+
+		// FIXME: not handled
+		v2.GET("/ws", func(c *gin.Context) {
+			m.HandleRequest(c.Writer, c.Request)
+		})
+
+		admin := v2.Group("/admin")
+		{
+			// FIXME: authentication
+			admin.POST("/broadcast", func(c *gin.Context) {
+				data, _ := c.GetRawData()
+				m.Broadcast([]byte(data))
+			})
 		}
 	}
 
