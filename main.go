@@ -120,6 +120,10 @@ func main() {
 			jma.GET("/tsunami", searchTsunami)
 			jma.GET("/tsunami/:id", getTsunami)
 		}
+		internal := v2.Group("/internal")
+		{
+			internal.GET("/userquake", getUserquakes)
+		}
 	}
 
 	r.Run()
@@ -282,4 +286,48 @@ func cleanJmaRecord(m bson.M) {
 	m["id"] = m["_id"]
 	delete(m, "_id")
 	delete(m, "expire")
+}
+
+func getUserquakes(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	limit := int64(1)
+	options := options.FindOptions{Limit: &limit, Sort: bson.D{{"time", -1}}}
+	filters := bson.D{{"code", 561}, {"time", bson.D{{"$gte", time.Now().Add(-600 * time.Second)}}}}
+
+	cur, err := collection.Find(ctx, filters, &options)
+	if err != nil {
+		return
+	}
+	defer cur.Close(ctx)
+
+	items := make([]bson.M, 0)
+	cur.All(ctx, &items)
+
+	items = append(items, getAreapeer(c))
+}
+
+func getAreapeer(c *gin.Context) bson.M {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	limit := int64(1)
+	options := options.FindOptions{Limit: &limit, Sort: bson.D{{"time", -1}}}
+	filters := bson.D{{"code", 555}}
+
+	cur, err := collection.Find(ctx, filters, &options)
+	if err != nil {
+		return nil
+	}
+	defer cur.Close(ctx)
+	cur.Next(ctx)
+
+	var result bson.M
+	err = cur.Decode(&result)
+	if err != nil {
+		return nil
+	}
+
+	return result
 }
