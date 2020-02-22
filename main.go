@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -13,6 +11,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kelseyhightower/envconfig"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,9 +20,9 @@ import (
 )
 
 type Config struct {
-	MongoDBURL string `json:"mongodb_url"`
-	Database   string `json:"database"`
-	Collection string `json:"collection"`
+	MongoDBURL string `envconfig:"mongodb_url"`
+	Database   string `envconfig:"database"`
+	Collection string `envconfig:"collection"`
 }
 
 type QuakeParam struct {
@@ -78,13 +77,11 @@ func validScale(
 }
 
 func main() {
-	file, err := ioutil.ReadFile("config.json")
+	var config Config
+	err := envconfig.Process("", &config)
 	if err != nil {
 		return
 	}
-
-	var config Config
-	json.Unmarshal(file, &config)
 
 	clientOptions := options.Client().ApplyURI(config.MongoDBURL)
 	client, err := mongo.NewClient(clientOptions)
