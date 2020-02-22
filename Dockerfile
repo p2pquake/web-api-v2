@@ -1,12 +1,10 @@
-FROM golang:latest
+FROM golang:latest as builder
+WORKDIR /go/src
+ADD . /go/src
+RUN CGO_ENABLED=0 go build . && ls -l /go/src
 
+FROM alpine:latest
 WORKDIR /go
-
-RUN go get -u github.com/gin-gonic/gin && \
-    go get -u github.com/gin-contrib/cors && \
-    go get -u gopkg.in/olahol/melody.v1 && \
-    go get -u go.mongodb.org/mongo-driver/mongo
-
-ADD . /go
-CMD ["go", "run", "main.go"]
+COPY --from=builder /go/src/web-api-v2 .
+CMD ["./web-api-v2"]
 
