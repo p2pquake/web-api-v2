@@ -120,7 +120,9 @@ components:
       required: false
       description: 読み飛ばす件数 (0以上、デフォルトは0)。例えば、 limit=100&offset=200 とすると、201件目から100件を返却します。
       schema:
-        type: string
+        type: integer
+        format: int32
+        minimum: 0
     limit:
       name: limit
       in: query
@@ -151,38 +153,38 @@ components:
       name: min_scale
       in: query
       required: false
-      description: 最大震度の下限
+      description: 最大震度の下限。値は10(震度1)、20(震度2)、30(震度3)、40(震度4)、45(震度5弱)、50(震度5強)、55(震度6弱)、60(震度6強)、70(震度7)です。
       schema:
         type: integer
         format: int32
         enum:
-          - 10(震度1)
-          - 20(震度2)
-          - 30(震度3)
-          - 40(震度4)
-          - 45(震度5弱)
-          - 50(震度5強)
-          - 55(震度6弱)
-          - 60(震度6強)
-          - 70(震度7)
+          - 10
+          - 20
+          - 30
+          - 40
+          - 45
+          - 50
+          - 55
+          - 60
+          - 70
     maxScale:
       name: max_scale
       in: query
       required: false
-      description: 最大震度の上限
+      description: 最大震度の上限。値は10(震度1)、20(震度2)、30(震度3)、40(震度4)、45(震度5弱)、50(震度5強)、55(震度6弱)、60(震度6強)、70(震度7)です。
       schema:
         type: integer
         format: int32
         enum:
-          - 10(震度1)
-          - 20(震度2)
-          - 30(震度3)
-          - 40(震度4)
-          - 45(震度5弱)
-          - 50(震度5強)
-          - 55(震度6弱)
-          - 60(震度6強)
-          - 70(震度7)
+          - 10
+          - 20
+          - 30
+          - 40
+          - 45
+          - 50
+          - 55
+          - 60
+          - 70
     prefecture:
       name: prefectures[]
       in: query
@@ -213,6 +215,7 @@ components:
       description: 指定日かそれ以降 (yyyyMMdd形式)
       schema:
         type: string
+        pattern: \d{8}
     untilDate:
       name: until_date
       in: query
@@ -220,16 +223,17 @@ components:
       description: 指定日かそれ以前 (yyyyMMdd形式)
       schema:
         type: string
+        pattern: \d{8}
     order:
       name: order
       in: query
-      description: 並び順
+      description: 並び順。1は昇順（古い順）、-1は降順（新しい順）です。デフォルトは降順。
       schema:
         type: integer
         format: int32
         enum:
-          - 1 (昇順、古い順)
-          - -1 (降順、新しい順)
+          - 1
+          - -1
     id:
       name: id
       in: path
