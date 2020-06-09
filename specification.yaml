@@ -134,21 +134,19 @@ components:
         minimum: 1
         maximum: 100
     quakeType:
-      name: types[]
+      name: quake_type
       in: query
       required: false
-      description: 地震情報の種類
+      description: 地震情報の種類。値はScalePrompt(震度速報)、Destination(震源に関する情報)、ScaleAndDestination(震度・震源に関する情報)、DetailScale(各地の震度に関する情報)、Foreign(遠地地震に関する情報)、Other(その他の情報)です。
       schema:
-        type: array
-        items:
-          type: string
-          enum: 
-            - ScalePrompt(震度速報)
-            - Destination(震源に関する情報)
-            - ScaleAndDestination(震度・震源に関する情報)
-            - DetailScale(各地の震度に関する情報)
-            - Foreign(遠地地震に関する情報)
-            - Other(その他の情報)
+        type: string
+        enum:
+          - ScalePrompt
+          - Destination
+          - ScaleAndDestination
+          - DetailScale
+          - Foreign
+          - Other
     minScale:
       name: min_scale
       in: query
