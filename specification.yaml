@@ -243,13 +243,23 @@ components:
     JMAQuake:
       type: object
       required:
+        - id
+        - code
         - issue
         - earthquake
       properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に551です。
         issue:
           type: object
           description: 発表元の情報
           required:
+            - time
             - type
           properties:
             source:
@@ -411,10 +421,14 @@ components:
     JMATsunami:
       type: object
       required:
+        - id
         - code
         - cancelled
         - issue
       properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
         code:
           type: integer
           format: int32
