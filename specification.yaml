@@ -94,24 +94,31 @@ paths:
           description: 指定IDの情報が見つかりません
     parameters:
       - $ref: '#/components/parameters/id'
-  /history:
-    get:
-      tags:
-        - (未実装)
-      summary: P2P地震情報 JSON API (v2)
-      description: 未実装です。[JSON API v1](https://www.p2pquake.net/dev/json-api/) をご利用ください。
-      responses:
-        200:
-          description: TODO
   /ws:
     get:
       tags:
-        - (未実装)
-      summary: P2P地震情報 リアルタイムAPI
-      description: 未実装です。
+        - P2P地震情報 API (未実装)
+      summary: P2P地震情報 WebSocket API
+      description: |
+        P2P地震情報の各種情報をリアルタイムに配信します。 WebSocket プロトコルでの接続が必要です。
       responses:
-        default:
-          description: TODO
+        101:
+          description: WebSocket 接続に切り替わります。
+          # content:
+          #   application/json:
+          #     schema:
+          #       $ref: '#/components/schemas/WebSocketAPI'
+  /history:
+    get:
+      tags:
+        - P2P地震情報 API (未実装)
+      summary: P2P地震情報 JSON API (v2)
+      description: |
+        P2P地震情報の各種情報を返却します。  
+        未実装: [JSON API v1](https://www.p2pquake.net/dev/json-api/) をご利用ください。
+      responses:
+        200:
+          description: 各種情報を返却します。
 components:
   parameters:
     offset:
