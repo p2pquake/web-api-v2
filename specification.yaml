@@ -249,6 +249,7 @@ components:
   schemas:
     JMAQuake:
       type: object
+      description: 地震情報
       required:
         - id
         - code
@@ -427,6 +428,7 @@ components:
         $ref: '#/components/schemas/JMAQuake'
     JMATsunami:
       type: object
+      description: 津波予報
       required:
         - id
         - code
