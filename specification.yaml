@@ -500,3 +500,61 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/JMATsunami'
+    UserquakeEvaluation:
+      type: object
+      description: 地震感知情報の評価結果です。
+      properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に9611です。
+        count:
+          type: integer
+          format: int32
+          description: 件数
+        confidence:
+          type: number
+          description: |
+            P2P地震情報 Beta3 における信頼度。  
+            0: 非表示、0.97015: レベル1、0.96774: レベル2、0.97024: レベル3、0.98052: レベル4。  
+            値は適合率 (precision) です。
+        started_at:
+          type: string
+          description: |
+            開始日時。地震感知情報のイベントを一意に識別するキーとなります。
+            形式は `2006/01/02 15:04:05.999` です。
+        updated_at:
+          type: string
+          description: 更新日時。形式は `2006/01/02 15:04:05.999` です。
+        time:
+          type: string
+          description: 評価日時。形式は `2006/01/02 15:04:05.999` です。
+        area_confidences:
+          type: object
+          description: 地域ごとの信頼度情報
+          properties:
+            nnn:
+              type: object
+              description: キーは地域コードです。
+              properties:
+                confidence:
+                  type: number
+                  description: |
+                    信頼度  
+                    P2P地震情報 Beta3 においては、 0未満: F、0.0以上0.2未満: E、0.2以上0.4未満: D、0.4以上0.6未満: C、0.6以上0.8未満: B、0.8以上: A です。
+                count:
+                  type: integer
+                  format: int32
+                  description: 件数
+                display:
+                  type: string
+                  description: P2P地震情報 Beta3 における信頼度表示
+        ver:
+          type: string
+          description: 評価プログラムバージョン
+        user-agent:
+          type: string
+          description: 評価プログラム
