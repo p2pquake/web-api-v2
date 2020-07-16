@@ -503,12 +503,44 @@ components:
     Userquake:
       type: object
       description: 地震感知情報の評価結果です。
+      properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に561です。
+        time:
+          type: string
+          description: 受信日時。形式は `2006/01/02 15:04:05.999` です。
+        area:
+          type: integer
+          format: int32
+          description: 地域コード
     Areapeers:
       type: object
       description: P2P地震情報ネットワークに接続しているピアの地域分布です。
     EEWDetection:
       type: object
       description: 緊急地震速報の発表検出です。
+      properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に554です。
+        time:
+          type: string
+          description: 受信日時。形式は `2006/01/02 15:04:05.999` です。
+        type:
+          type: string
+          description: 検出種類
+          enum:
+            - "\"Full\" (チャイム＋音声)"
+            - "\"Chime\" (チャイム (未実装))"
     UserquakeEvaluation:
       type: object
       description: 地震感知情報の評価結果です。
