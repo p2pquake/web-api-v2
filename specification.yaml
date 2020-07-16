@@ -561,9 +561,3 @@ components:
                 display:
                   type: string
                   description: P2P地震情報 Beta3 における信頼度表示
-        ver:
-          type: string
-          description: 評価プログラムバージョン
-        user-agent:
-          type: string
-          description: 評価プログラム
