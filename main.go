@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"reflect"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,12 +11,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/kelseyhightower/envconfig"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"gopkg.in/go-playground/validator.v8"
 )
 
 type Config struct {
@@ -49,11 +49,8 @@ type TsunamiParam struct {
 
 var collection *mongo.Collection
 
-func validQuakeType(
-	v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value,
-	field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string,
-) bool {
-	if quakeType, ok := field.Interface().(string); ok {
+func validQuakeType(fl validator.FieldLevel) bool {
+	if quakeType, ok := fl.Field().Interface().(string); ok {
 		if quakeType == "ScalePrompt" || quakeType == "Destination" ||
 			quakeType == "ScaleAndDestination" || quakeType == "DetailScale" ||
 			quakeType == "Foreign" || quakeType == "Other" {
@@ -63,11 +60,8 @@ func validQuakeType(
 	return false
 }
 
-func validScale(
-	v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value,
-	field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string,
-) bool {
-	if scale, ok := field.Interface().(int64); ok {
+func validScale(fl validator.FieldLevel) bool {
+	if scale, ok := fl.Field().Interface().(int64); ok {
 		if scale == 10 || scale == 20 || scale == 30 || scale == 40 ||
 			scale == 45 || scale == 50 || scale == 55 || scale == 60 || scale == 70 {
 			return true
@@ -80,13 +74,13 @@ func main() {
 	var config Config
 	err := envconfig.Process("", &config)
 	if err != nil {
-		return
+		log.Fatalf("config parse error: %v", err)
 	}
 
 	clientOptions := options.Client().ApplyURI(config.MongoDBURL)
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
-		return
+		log.Fatalf("mongo client create error: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -94,7 +88,7 @@ func main() {
 
 	err = client.Connect(ctx)
 	if err != nil {
-		return
+		log.Fatalf("mongo connect error: %v", err)
 	}
 	defer client.Disconnect(ctx)
 
