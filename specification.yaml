@@ -104,10 +104,16 @@ paths:
       responses:
         101:
           description: WebSocket 接続に切り替わります。
-          # content:
-          #   application/json:
-          #     schema:
-          #       $ref: '#/components/schemas/WebSocketAPI'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/JMAQuake'
+                  - $ref: '#/components/schemas/JMATsunami'
+                  - $ref: '#/components/schemas/Areapeers'
+                  - $ref: '#/components/schemas/EEWDetection'
+                  - $ref: '#/components/schemas/Userquake'
+                  - $ref: '#/components/schemas/UserquakeEvaluation'
   /history:
     get:
       tags:
@@ -119,6 +125,18 @@ paths:
       responses:
         200:
           description: 各種情報を返却します。
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/JMAQuake'
+                    - $ref: '#/components/schemas/JMATsunami'
+                    - $ref: '#/components/schemas/Areapeers'
+                    - $ref: '#/components/schemas/EEWDetection'
+                    - $ref: '#/components/schemas/Userquake'
+                    - $ref: '#/components/schemas/UserquakeEvaluation'
 components:
   parameters:
     offset:
