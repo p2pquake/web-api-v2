@@ -521,6 +521,31 @@ components:
     Areapeers:
       type: object
       description: P2P地震情報ネットワークに接続しているピアの地域分布です。
+      properties:
+        id:
+          type: string
+          description: 情報を一意に識別するID
+        code:
+          type: integer
+          format: int32
+          description: 情報コード。常に561です。
+        time:
+          type: string
+          description: 受信日時。形式は `2006/01/02 15:04:05.999` です。
+        areas:
+          type: array
+          description: ピアの地域分布
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+                description: 地域コード
+              peer:
+                type: integer
+                format: int32
+                description: ピア数
     EEWDetection:
       type: object
       description: 緊急地震速報の発表検出です。
