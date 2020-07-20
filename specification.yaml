@@ -137,6 +137,11 @@ paths:
                     - $ref: '#/components/schemas/EEWDetection'
                     - $ref: '#/components/schemas/Userquake'
                     - $ref: '#/components/schemas/UserquakeEvaluation'
+        400:
+          description: パラメタに誤りがあります
+    parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
 components:
   parameters:
     offset:
