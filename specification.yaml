@@ -101,6 +101,9 @@ paths:
       summary: P2P地震情報 WebSocket API
       description: |
         P2P地震情報の各種情報をリアルタイムに配信します。 WebSocket プロトコルでの接続が必要です。
+        - テキストフレーム (opcode: 1) で JSON オブジェクトを配信します。 1 フレーム毎にスキーマで指定したいずれかの情報が含まれています。
+        - 同一の情報を複数回配信する可能性があります。 `id` を用いて重複を取り除くことを推奨します。
+        - 情報は P2P地震情報 JSON API (v2) と全く同じものです。過去の情報の取得には JSON API をご利用ください。
       responses:
         101:
           description: WebSocket 接続に切り替わります。
