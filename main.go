@@ -111,6 +111,8 @@ func main() {
 			jma.GET("/tsunami", searchTsunami)
 			jma.GET("/tsunami/:id", getTsunami)
 		}
+
+		v2.GET("/history", getHistories)
 	}
 
 	r.Run()
@@ -273,4 +275,8 @@ func cleanJmaRecord(m bson.M) {
 	m["id"] = m["_id"]
 	delete(m, "_id")
 	delete(m, "expire")
+}
+
+func getHistories(c *gin.Context) {
+	c.String(200, "History not implemented")
 }
