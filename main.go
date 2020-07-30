@@ -20,9 +20,10 @@ import (
 )
 
 type Config struct {
-	MongoDBURL string `envconfig:"mongodb_url"`
-	Database   string `envconfig:"database"`
-	Collection string `envconfig:"collection"`
+	MongoDBURL        string `envconfig:"mongodb_url"`
+	Database          string `envconfig:"database"`
+	JmaCollection     string `envconfig:"jma_collection"`
+	HistoryCollection string `envconfig:"history_collection"`
 }
 
 type QuakeParam struct {
@@ -47,7 +48,13 @@ type TsunamiParam struct {
 	UntilDate string `form:"until_date" binding:"omitempty,numeric,len=8"`
 }
 
-var collection *mongo.Collection
+type HistoryParam struct {
+	Offset int64 `form:"offset" binding:"min=0"`
+	Limit  int64 `form:"limit" binding:"min=0,max=100"`
+}
+
+var jmaCollection *mongo.Collection
+var historyCollection *mongo.Collection
 
 func validQuakeType(fl validator.FieldLevel) bool {
 	if quakeType, ok := fl.Field().Interface().(string); ok {
@@ -92,7 +99,8 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	collection = client.Database(config.Database).Collection(config.Collection)
+	jmaCollection = client.Database(config.Database).Collection(config.JmaCollection)
+	historyCollection = client.Database(config.Database).Collection(config.HistoryCollection)
 
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -176,7 +184,7 @@ func searchQuake(c *gin.Context) {
 		filters = append(filters, bson.E{"points", bson.D{{"$elemMatch", bson.D{{"pref", prefectureName}, {"scale", bson.D{{"$gte", scale}}}}}}})
 	}
 
-	cur, err := collection.Find(ctx, filters, &options)
+	cur, err := jmaCollection.Find(ctx, filters, &options)
 	if err != nil {
 		return
 	}
@@ -225,7 +233,7 @@ func searchTsunami(c *gin.Context) {
 		filters = append(filters, bson.E{"issue.time", bson.D{{"$lte", matches[1] + "/" + matches[2] + "/" + matches[3] + " 23:59:59"}}})
 	}
 
-	cur, err := collection.Find(ctx, filters, &options)
+	cur, err := jmaCollection.Find(ctx, filters, &options)
 	if err != nil {
 		return
 	}
@@ -261,7 +269,7 @@ func getItem(c *gin.Context, code int64) {
 	filters := bson.D{{"code", code}, {"_id", id}}
 
 	var result bson.M
-	err = collection.FindOne(ctx, filters).Decode(&result)
+	err = jmaCollection.FindOne(ctx, filters).Decode(&result)
 	if err != nil {
 		c.Status(404)
 		return
@@ -278,5 +286,35 @@ func cleanJmaRecord(m bson.M) {
 }
 
 func getHistories(c *gin.Context) {
-	c.String(200, "History not implemented")
+	var historyParam HistoryParam
+	if err := c.ShouldBindWith(&historyParam, binding.Query); err != nil {
+		c.Status(400)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	// options
+	offset := historyParam.Offset
+	limit := historyParam.Limit
+	if limit == 0 {
+		limit = 10
+	}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
+
+	cur, err := historyCollection.Find(ctx, bson.D{}, &options)
+	if err != nil {
+		return
+	}
+	defer cur.Close(ctx)
+
+	items := make([]bson.M, 0)
+	cur.All(ctx, &items)
+
+	for _, item := range items {
+		cleanJmaRecord(item)
+	}
+
+	c.JSON(200, items)
 }
