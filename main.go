@@ -303,7 +303,10 @@ func getHistories(c *gin.Context) {
 	}
 	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
 
-	cur, err := historyCollection.Find(ctx, bson.D{}, &options)
+	// filters
+	filters := bson.D{{"code", bson.D{{"$nin", bson.A{5510, 5511}}}}}
+
+	cur, err := historyCollection.Find(ctx, &filters, &options)
 	if err != nil {
 		return
 	}
