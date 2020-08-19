@@ -124,6 +124,7 @@ paths:
       summary: P2P地震情報 JSON API (v2)
       description: |
         P2P地震情報の各種情報を返却します。  
+        `offset` パラメタは利用可能ですが、 1 週間以上古い情報は取得できない場合があります。  
         未実装: [JSON API v1](https://www.p2pquake.net/dev/json-api/) をご利用ください。
       responses:
         200:
@@ -143,6 +144,7 @@ paths:
         400:
           description: パラメタに誤りがあります
     parameters:
+      - $ref: '#/components/parameters/codes'
       - $ref: '#/components/parameters/limit'
       - $ref: '#/components/parameters/offset'
 components:
@@ -166,6 +168,16 @@ components:
         format: int32
         minimum: 1
         maximum: 100
+    codes:
+      name: codes
+      in: query
+      required: false
+      description: 取得したい情報の情報コード (デフォルトはすべて)。値は551(地震情報)、552(津波予報)、554(緊急地震速報 発表検出)、555(各地域ピア数)、561(地震感知情報)、9611(地震感知情報 解析結果)です。
+      schema:
+        type: array
+        items:
+          type: integer
+          format: int32
     quakeType:
       name: quake_type
       in: query
@@ -564,7 +576,7 @@ components:
             - areas
           properties:
             code:
-              description: 情報コード。常に561です。
+              description: 情報コード。常に555です。
             areas:
               type: array
               description: ピアの地域分布

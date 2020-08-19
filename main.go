@@ -49,8 +49,9 @@ type TsunamiParam struct {
 }
 
 type HistoryParam struct {
-	Offset int64 `form:"offset" binding:"min=0"`
-	Limit  int64 `form:"limit" binding:"min=0,max=100"`
+	Codes  []int64 `form:"codes" binding:"omitempty,dive,numeric"`
+	Offset int64   `form:"offset" binding:"min=0"`
+	Limit  int64   `form:"limit" binding:"min=0,max=100"`
 }
 
 var jmaCollection *mongo.Collection
@@ -305,9 +306,13 @@ func getHistories(c *gin.Context) {
 
 	// filters
 	filters := bson.D{{"code", bson.D{{"$nin", bson.A{5510, 5511}}}}}
+	if len(historyParam.Codes) > 0 {
+		filters = bson.D{{"$and", []bson.D{filters, bson.D{{"code", bson.D{{"$in", historyParam.Codes}}}}}}}
+	}
 
 	cur, err := historyCollection.Find(ctx, &filters, &options)
 	if err != nil {
+		c.Status(500)
 		return
 	}
 	defer cur.Close(ctx)
