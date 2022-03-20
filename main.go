@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/p2pquake/web-api-v2/userquake"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,6 +26,10 @@ type Config struct {
 	Database          string `envconfig:"database"`
 	JmaCollection     string `envconfig:"jma_collection"`
 	HistoryCollection string `envconfig:"history_collection"`
+}
+
+type HumanReadableParam struct {
+	Limit int64 `form:"limit" binding:"min=0,max=100"`
 }
 
 type QuakeParam struct {
@@ -111,6 +117,11 @@ func main() {
 		v.RegisterValidation("scale", validScale)
 	}
 
+	v1 := r.Group("/v1")
+	{
+		v1.GET("/human-readable", getHumanReadable)
+	}
+
 	v2 := r.Group("/v2")
 	{
 		jma := v2.Group("/jma")
@@ -125,6 +136,147 @@ func main() {
 	}
 
 	r.Run()
+}
+
+func getHumanReadable(c *gin.Context) {
+	var humanReadableParam HumanReadableParam
+	if err := c.ShouldBindWith(&humanReadableParam, binding.Query); err != nil {
+		c.Status(400)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	limit := humanReadableParam.Limit
+	if limit == 0 {
+		limit = 10
+	}
+
+	options := options.FindOptions{Limit: &limit, Sort: bson.D{{"_id", -1}}}
+	filters := bson.D{{"code", bson.M{"$in": bson.A{5510, 5520}}}}
+	cur, err := historyCollection.Find(ctx, &filters, &options)
+	if err != nil {
+		c.Status(500)
+		return
+	}
+	defer cur.Close(ctx)
+
+	items := make([]bson.M, 0)
+	cur.All(ctx, &items)
+
+	for i, item := range items {
+		code := item["code"].(int32)
+		if code == 5510 {
+			items[i]["code"] = 551
+		}
+		if code == 5520 {
+			items[i]["code"] = 552
+			items[i]["issue"].(primitive.M)["type"] = "Focus"
+		}
+
+		items[i]["_id"] = bson.M{"$oid": items[i]["_id"]}
+		cleanToHumanReadable(item)
+	}
+
+	{
+		// userquake と結合した後、 time で降順ソートして件数制限をかける.
+		lastTime := items[len(items)-1]["time"]
+
+		uqFilters := bson.D{
+			{"code", 561},
+			{"time", bson.M{"$gte": lastTime}},
+		}
+
+		uqCur, err := historyCollection.Find(ctx, &uqFilters)
+		if err != nil {
+			log.Printf("find error: %v\n", err)
+			c.Status(500)
+			return
+		}
+		defer uqCur.Close(ctx)
+
+		var uqLastTime *time.Time = nil
+		var uqLastRecords []primitive.M
+		var uqAnalyzedData []primitive.M
+		for uqCur.Next(ctx) {
+			var result bson.M
+			if err := uqCur.Decode(&result); err != nil {
+				c.Status(500)
+				return
+			}
+
+			t, err := time.Parse("2006/01/02 15:04:05", result["time"].(string)[:19])
+			if err != nil {
+				c.Status(500)
+				return
+			}
+
+			if uqLastTime == nil || t.Sub(*uqLastTime) >= 30*time.Second {
+				if len(uqLastRecords) >= 3 {
+					uqAnalyzedData = append(uqAnalyzedData, analyzeCollection(uqLastRecords))
+				}
+				uqLastRecords = []primitive.M{}
+			}
+			uqLastRecords = append(uqLastRecords, result)
+			uqLastTime = &t
+		}
+
+		if len(uqLastRecords) >= 3 {
+			uqAnalyzedData = append(uqAnalyzedData, analyzeCollection(uqLastRecords))
+		}
+
+		items = append(items, uqAnalyzedData...)
+	}
+
+	sort.Slice(items, func(i, j int) bool { return items[i]["time"].(string) > items[j]["time"].(string) })
+	items = items[0:limit]
+
+	c.JSON(200, items)
+}
+
+func analyzeCollection(records []primitive.M) primitive.M {
+	data := primitive.M{}
+	data["time"] = records[0]["time"]
+	data["code"] = 5610
+
+	data["count"] = len(records)
+
+	regions := map[string]int{}
+	prefs := map[string]int{}
+	areas := map[string]int{}
+
+	for _, record := range records {
+		area := int(record["area"].(int32))
+		names, ok := userquake.GetAreaName(area)
+		if !ok {
+			continue
+		}
+
+		_, ok = regions[names[0]]
+		if !ok {
+			regions[names[0]] = 0
+		}
+		regions[names[0]] += 1
+
+		_, ok = prefs[names[1]]
+		if !ok {
+			prefs[names[1]] = 0
+		}
+		prefs[names[1]] += 1
+
+		_, ok = areas[names[2]]
+		if !ok {
+			areas[names[2]] = 0
+		}
+		areas[names[2]] += 1
+	}
+
+	data["regions"] = regions
+	data["prefs"] = prefs
+	data["areas"] = areas
+
+	return data
 }
 
 func searchQuake(c *gin.Context) {
@@ -284,6 +436,14 @@ func cleanJmaRecord(m bson.M) {
 	m["id"] = m["_id"]
 	delete(m, "_id")
 	delete(m, "expire")
+}
+
+func cleanToHumanReadable(m bson.M) {
+	delete(m, "expire")
+	delete(m, "ver")
+	delete(m, "hop")
+	delete(m, "uid")
+	delete(m, "user-agent")
 }
 
 func getHistories(c *gin.Context) {
