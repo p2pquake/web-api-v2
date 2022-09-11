@@ -153,7 +153,7 @@ func getHumanReadable(c *gin.Context) {
 		limit = 10
 	}
 
-	options := options.FindOptions{Limit: &limit, Sort: bson.D{{"_id", -1}}}
+	options := options.FindOptions{Limit: &limit, Sort: bson.D{{"$natural", -1}}}
 	filters := bson.D{{"code", bson.M{"$in": bson.A{5510, 5520}}}}
 	cur, err := historyCollection.Find(ctx, &filters, &options)
 	if err != nil {
@@ -462,7 +462,7 @@ func getHistories(c *gin.Context) {
 	if limit == 0 {
 		limit = 10
 	}
-	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"time", -1}}}
+	options := options.FindOptions{Limit: &limit, Skip: &offset, Sort: bson.D{{"$natural", -1}}}
 
 	// filters
 	filters := bson.D{{"code", bson.D{{"$nin", bson.A{5510, 5511}}}}}
