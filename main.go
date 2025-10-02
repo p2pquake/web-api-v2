@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -84,6 +85,31 @@ func validScale(fl validator.FieldLevel) bool {
 	return false
 }
 
+func validateQueryParams(c *gin.Context, paramStruct interface{}) []string {
+	allowedParams := make(map[string]bool)
+
+	t := reflect.TypeOf(paramStruct)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if formTag := field.Tag.Get("form"); formTag != "" {
+			allowedParams[formTag] = true
+		}
+	}
+
+	var extraKeys []string
+	for param := range c.Request.URL.Query() {
+		if !allowedParams[param] {
+			extraKeys = append(extraKeys, param)
+		}
+	}
+
+	return extraKeys
+}
+
 func main() {
 	var config Config
 	err := envconfig.Process("", &config)
@@ -140,6 +166,10 @@ func main() {
 
 func getHumanReadable(c *gin.Context) {
 	var humanReadableParam HumanReadableParam
+	if extraKeys := validateQueryParams(c, &humanReadableParam); len(extraKeys) > 0 {
+		c.JSON(400, gin.H{"error": "extra keys found", "extra_keys": extraKeys})
+		return
+	}
 	if err := c.ShouldBindWith(&humanReadableParam, binding.Query); err != nil {
 		c.Status(400)
 		return
@@ -281,6 +311,10 @@ func analyzeCollection(records []primitive.M) primitive.M {
 
 func searchQuake(c *gin.Context) {
 	var quakeParam QuakeParam
+	if extraKeys := validateQueryParams(c, &quakeParam); len(extraKeys) > 0 {
+		c.JSON(400, gin.H{"error": "extra keys found", "extra_keys": extraKeys})
+		return
+	}
 	if err := c.ShouldBindWith(&quakeParam, binding.Query); err != nil {
 		c.Status(400)
 		return
@@ -355,6 +389,10 @@ func searchQuake(c *gin.Context) {
 
 func searchTsunami(c *gin.Context) {
 	var tsunamiParam TsunamiParam
+	if extraKeys := validateQueryParams(c, &tsunamiParam); len(extraKeys) > 0 {
+		c.JSON(400, gin.H{"error": "extra keys found", "extra_keys": extraKeys})
+		return
+	}
 	if err := c.ShouldBindWith(&tsunamiParam, binding.Query); err != nil {
 		c.Status(400)
 		return
@@ -448,6 +486,10 @@ func cleanToHumanReadable(m bson.M) {
 
 func getHistories(c *gin.Context) {
 	var historyParam HistoryParam
+	if extraKeys := validateQueryParams(c, &historyParam); len(extraKeys) > 0 {
+		c.JSON(400, gin.H{"error": "extra keys found", "extra_keys": extraKeys})
+		return
+	}
 	if err := c.ShouldBindWith(&historyParam, binding.Query); err != nil {
 		c.Status(400)
 		return
