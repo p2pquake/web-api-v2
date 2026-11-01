@@ -7,6 +7,7 @@ RUN CGO_ENABLED=0 go build -tags=go_json . && ls -l /go/src
 
 FROM alpine:latest
 WORKDIR /go
+ENV GIN_MODE=release
 COPY --from=builder /go/src/web-api-v2 .
 CMD ["./web-api-v2"]
 

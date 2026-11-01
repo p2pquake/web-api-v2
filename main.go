@@ -138,7 +138,9 @@ func main() {
 	jmaCollection = client.Database(config.Database).Collection(config.JmaCollection)
 	historyCollection = client.Database(config.Database).Collection(config.HistoryCollection)
 
-	r := gin.Default()
+	// アクセスログは nginx 側で出すので、gin の Logger は使わない (Recovery のみ).
+	r := gin.New()
+	r.Use(gin.Recovery())
 	r.Use(cors.Default())
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
