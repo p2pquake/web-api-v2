@@ -1,4 +1,4 @@
-FROM golang:1.18-bullseye as builder
+FROM golang:1.27-trixie as builder
 WORKDIR /go/src
 COPY go.mod go.sum /go/src/
 RUN go mod download

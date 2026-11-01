@@ -1,6 +1,6 @@
 module github.com/p2pquake/web-api-v2
 
-go 1.18
+go 1.27.0
 
 require (
 	github.com/gin-contrib/cors v1.3.1
