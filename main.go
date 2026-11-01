@@ -64,6 +64,9 @@ type HistoryParam struct {
 var jmaCollection *mongo.Collection
 var historyCollection *mongo.Collection
 
+// リクエストごとにコンパイルしないよう、パッケージ変数にしている.
+var dateRegexp = regexp.MustCompile(`^(\d{4})(\d{2})(\d{2})$`)
+
 func validQuakeType(fl validator.FieldLevel) bool {
 	if quakeType, ok := fl.Field().Interface().(string); ok {
 		if quakeType == "ScalePrompt" || quakeType == "Destination" ||
@@ -338,7 +341,6 @@ func searchQuake(c *gin.Context) {
 	// filters
 	filters := bson.D{{"code", 551}}
 
-	dateRegexp := regexp.MustCompile(`^(\d{4})(\d{2})(\d{2})$`)
 	if matches := dateRegexp.FindStringSubmatch(quakeParam.SinceDate); matches != nil {
 		filters = append(filters, bson.E{"earthquake.time", bson.D{{"$gte", matches[1] + "/" + matches[2] + "/" + matches[3] + " 00:00:00"}}})
 	}
@@ -416,7 +418,6 @@ func searchTsunami(c *gin.Context) {
 	// filters
 	filters := bson.D{{"code", 552}}
 
-	dateRegexp := regexp.MustCompile(`^(\d{4})(\d{2})(\d{2})$`)
 	if matches := dateRegexp.FindStringSubmatch(tsunamiParam.SinceDate); matches != nil {
 		filters = append(filters, bson.E{"issue.time", bson.D{{"$gte", matches[1] + "/" + matches[2] + "/" + matches[3] + " 00:00:00"}}})
 	}
